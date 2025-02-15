@@ -1,0 +1,189 @@
+definitions:
+  controller.GeocodeRequest:
+    properties:
+      lat:
+        example: "55.878"
+        type: string
+      lng:
+        example: "37.653"
+        type: string
+    type: object
+  controller.GeocodeResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/entity.Address'
+        type: array
+    type: object
+  controller.SearchRequest:
+    properties:
+      query:
+        example: мск сухонска 11/-89
+        type: string
+    type: object
+  controller.SearchResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/entity.Address'
+        type: array
+    type: object
+  entity.Address:
+    properties:
+      city:
+        type: string
+      house:
+        type: string
+      lat:
+        type: string
+      lon:
+        type: string
+      street:
+        type: string
+    type: object
+  entity.User:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Geo Service
+  title: Geo Service
+  version: "1.0"
+paths:
+  /api/address/geocode:
+    post:
+      consumes:
+      - application/json
+      description: Request structure for geocoding addresses
+      operationId: geo
+      parameters:
+      - description: Handle Address by GeoCode
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controller.GeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.GeocodeResponse'
+        "400":
+          description: Empty Query
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: receive Address by GeoCode
+      tags:
+      - GeoCode
+  /api/address/search:
+    post:
+      consumes:
+      - application/json
+      description: Receive Information by Address
+      operationId: addSearch
+      parameters:
+      - description: Receive information by Address
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controller.SearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.SearchResponse'
+        "400":
+          description: Empty Query
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: receive Information by Address
+      tags:
+      - AddressSearch
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with username and password
+      parameters:
+      - description: Username and Pass for logining
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token string
+          schema:
+            type: string
+        "400":
+          description: Empty Query
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Login with username and password
+      tags:
+      - Login and Registration
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a user with login and password
+      parameters:
+      - description: Username and Pass for registration
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created
+          schema:
+            type: string
+        "400":
+          description: Empty Query
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Register a user
+      tags:
+      - Login and Registration
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
