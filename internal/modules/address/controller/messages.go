@@ -1,6 +1,8 @@
 package controller
 
-import "GeoService/internal/entity"
+import (
+	"GeoService/internal/modules/address/entity"
+)
 
 type GeocodeRequest struct {
 	Lat string `json:"lat" example:"55.878"`

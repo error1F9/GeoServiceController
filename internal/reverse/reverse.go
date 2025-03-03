@@ -25,7 +25,7 @@ func NewReverseProxy(host, port string) *ReverseProxy {
 
 func (rp *ReverseProxy) ReverseProxy(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api") || strings.HasPrefix(r.URL.Path, "/swagger/") {
+		if strings.HasPrefix(r.URL.Path, "/api") || strings.HasPrefix(r.URL.Path, "/swagger/") || strings.HasPrefix(r.URL.Path, "/debug") || strings.HasPrefix(r.URL.Path, "/metrics") {
 			next.ServeHTTP(w, r)
 			return
 		}

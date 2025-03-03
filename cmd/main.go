@@ -1,18 +1,18 @@
 package main
 
 import (
-	"GeoService/internal/controller"
-	"GeoService/internal/service"
-	_ "GeoService/pkg/docs"
-	"GeoService/pkg/router"
-	"fmt"
-	"github.com/go-chi/jwtauth/v5"
+	"GeoService/internal/cacheproxy"
+	cache2 "GeoService/internal/infrastructure/cache"
+	"GeoService/internal/modules"
+	"GeoService/internal/modules/address/controller"
+	"GeoService/internal/modules/address/service"
+	authController "GeoService/internal/modules/auth/controller"
+	auth "GeoService/internal/modules/auth/service"
+	_ "GeoService/internal/pkg/docs"
+	"GeoService/internal/pkg/metrics"
+	"GeoService/internal/router"
 	"log"
-	"os"
-	"time"
 )
-
-var TokenAuth *jwtauth.JWTAuth
 
 // @title Geo Service
 // @version 1.0
@@ -25,26 +25,21 @@ var TokenAuth *jwtauth.JWTAuth
 // @host localhost:8080
 // @BasePath /
 func main() {
-	geoService := service.NewGeoService("90a5dd26d0ba58ea94f25f085aa113ad67f2af27", "eb3066ce98823788c54dafb9e5e66d87a3c92d9d")
-	geoController := controller.NewGeoServiceController(*geoService)
-	if err := router.Serve(geoController); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+
+	c, err := cache2.NewRedisCache("redis-container:6379", "123456")
+	if err != nil {
+		log.Fatal(err)
 	}
-}
 
-const content = ``
+	geoService := service.NewGeoService("90a5dd26d0ba58ea94f25f085aa113ad67f2af27", "eb3066ce98823788c54dafb9e5e66d87a3c92d9d")
+	cache := cacheproxy.NewCache(c, geoService)
+	authService := auth.NewAuthService([]byte("fj0qwef089wsjg80sjg90dj$@UJF)!@JF"), c)
 
-func WorkerTest() {
-	t := time.NewTicker(1 * time.Second)
-	var b byte = 0
-	for {
-		select {
-		case <-t.C:
-			err := os.WriteFile("/app/static/_index.md", []byte(fmt.Sprintf(content, b)), 0644)
-			if err != nil {
-				log.Println(err)
-			}
-			b++
-		}
+	geoController := controller.NewGeoServiceController(geoService, cache)
+	authControl := authController.NewAuthController(authService)
+	superController := modules.NewSuperController(*geoController, *authControl)
+
+	if err = router.Serve(superController, metrics.PrometheusMetrics); err != nil {
+		log.Fatalf("failed to start server: %v", err)
 	}
 }

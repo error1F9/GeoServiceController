@@ -1,25 +1,18 @@
 package service
 
 import (
-	"GeoService/internal"
-	"GeoService/internal/entity"
+	"GeoService/internal/modules/address/entity"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/ekomobile/dadata/v2/api/suggest"
 	"github.com/ekomobile/dadata/v2/client"
-	"github.com/go-chi/jwtauth/v5"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
-var logPass = make(map[string]string)
-
 type GeoService struct {
-	jwtAuth   *jwtauth.JWTAuth
 	api       *suggest.Api
 	apiKey    string
 	secretKey string
@@ -28,9 +21,6 @@ type GeoService struct {
 type GeoProvider interface {
 	AddressSearch(input string) ([]*entity.Address, error)
 	GeoCode(lat, lng string) ([]*entity.Address, error)
-	Register(user entity.User) error
-	Login(user entity.User) (string, error)
-	GetJWTAuth() *jwtauth.JWTAuth
 }
 
 func NewGeoService(apiKey, secretKey string) *GeoService {
@@ -49,18 +39,11 @@ func NewGeoService(apiKey, secretKey string) *GeoService {
 		Client: client.NewClient(endpointUrl, client.WithCredentialProvider(&creds)),
 	}
 
-	tokenAuth := jwtauth.New("HS256", []byte("123456"), nil)
-
 	return &GeoService{
 		api:       &api,
 		apiKey:    apiKey,
 		secretKey: secretKey,
-		jwtAuth:   tokenAuth,
 	}
-}
-
-func (g *GeoService) GetJWTAuth() *jwtauth.JWTAuth {
-	return g.jwtAuth
 }
 
 func (g *GeoService) AddressSearch(input string) ([]*entity.Address, error) {
@@ -94,7 +77,7 @@ func (g *GeoService) GeoCode(lat, lng string) ([]*entity.Address, error) {
 	if err != nil {
 		return nil, err
 	}
-	var geoCode internal.GeoCode
+	var geoCode GeoCode
 
 	err = json.NewDecoder(resp.Body).Decode(&geoCode)
 	if err != nil {
@@ -113,38 +96,4 @@ func (g *GeoService) GeoCode(lat, lng string) ([]*entity.Address, error) {
 	}
 
 	return res, nil
-}
-
-func (g *GeoService) Register(user entity.User) error {
-	if user.Username == "" || user.Password == "" {
-		return errors.New("username or password is empty")
-	}
-
-	if _, ok := logPass[user.Username]; ok {
-		return errors.New("username exist")
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return errors.New("failed to hash password")
-	}
-
-	logPass[user.Username] = string(hashedPassword)
-
-	return err
-}
-
-func (g *GeoService) Login(user entity.User) (string, error) {
-	if _, ok := logPass[user.Username]; !ok {
-		return "", errors.New("username not exist")
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(logPass[user.Username]), []byte(user.Password)); err != nil {
-		return "", errors.New("password is wrong")
-	}
-
-	_, tokenString, err := g.jwtAuth.Encode(map[string]interface{}{"username": user.Username})
-
-	return tokenString, err
-
 }
