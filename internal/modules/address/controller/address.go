@@ -16,6 +16,11 @@ func NewGeoServiceController(service service.GeoProvider, cache cacheproxy.Cache
 	return &GeoServiceController{service: service, cache: cache}
 }
 
+type GeoServiceControllerInterface interface {
+	HandleAddressGeocode(w http.ResponseWriter, r *http.Request)
+	HandleAddressSearch(w http.ResponseWriter, r *http.Request)
+}
+
 // HandleAddressGeocode
 // @Summary receive Address by GeoCode
 // @Tags GeoCode
@@ -29,6 +34,8 @@ func NewGeoServiceController(service service.GeoProvider, cache cacheproxy.Cache
 // @failure 400 {string} string "Empty Query"
 // @failure 500 {string} string "Internal Server Error"
 // @Router /api/address/geocode [post]
+
+//go:generate mockgen -source=address.go -destination=mocks/mock_controller.go -package=mocks
 func (g *GeoServiceController) HandleAddressGeocode(w http.ResponseWriter, r *http.Request) {
 	var geoReq GeocodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&geoReq); err != nil || geoReq.Lng == "" || geoReq.Lat == "" {

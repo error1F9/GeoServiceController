@@ -18,6 +18,7 @@ type GeoService struct {
 	secretKey string
 }
 
+//go:generate mockgen -source=address.go -destination=mocks/mock_controller.go -package=mocks
 type GeoProvider interface {
 	AddressSearch(input string) ([]*entity.Address, error)
 	GeoCode(lat, lng string) ([]*entity.Address, error)

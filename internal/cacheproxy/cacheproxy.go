@@ -32,6 +32,7 @@ type Cacher interface {
 	GeoCodeWithCache(ctx context.Context, lat, lng string) ([]*entity.Address, error)
 }
 
+//go:generate mockgen -source=cacheproxy.go -destination=mocks/mock_controller.go -package=mocks
 func (c *CacheProxy) Set(ctx context.Context, key string, data interface{}) error {
 	addresses, err := json.Marshal(data)
 	if err != nil {
