@@ -1,4 +1,4 @@
-package entity
+package models
 
 type Address struct {
 	City   string `json:"city"`

@@ -15,17 +15,32 @@ services:
       dockerfile: Dockerfile
     container_name: proxy-container
     ports:
-      - "8080:8080"
+      - ${PORT}:${PORT}
     depends_on:
       - hugo
-    restart: unless-stopped
+      - db
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    restart: on-failure
 
-  redis:
-    container_name: redis-container
-    image: redis
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "6379:6379"
-    restart: unless-stopped
+      - ${DB_PORT}:5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
 
   grafana:
     container_name: grafana-container

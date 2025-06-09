@@ -1,22 +1,20 @@
 package controller
 
 import (
-	"GeoService/internal/cacheproxy"
 	"GeoService/internal/modules/address/service"
 	"encoding/json"
 	"net/http"
 )
 
-type GeoServiceController struct {
+type GeoController struct {
 	service service.GeoProvider
-	cache   cacheproxy.Cacher
 }
 
-func NewGeoServiceController(service service.GeoProvider, cache cacheproxy.Cacher) *GeoServiceController {
-	return &GeoServiceController{service: service, cache: cache}
+func NewGeoController(service service.GeoProvider) *GeoController {
+	return &GeoController{service: service}
 }
 
-type GeoServiceControllerInterface interface {
+type Geoer interface {
 	HandleAddressGeocode(w http.ResponseWriter, r *http.Request)
 	HandleAddressSearch(w http.ResponseWriter, r *http.Request)
 }
@@ -36,14 +34,14 @@ type GeoServiceControllerInterface interface {
 // @Router /api/address/geocode [post]
 
 //go:generate mockgen -source=address.go -destination=mocks/mock_controller.go -package=mocks
-func (g *GeoServiceController) HandleAddressGeocode(w http.ResponseWriter, r *http.Request) {
+func (g *GeoController) HandleAddressGeocode(w http.ResponseWriter, r *http.Request) {
 	var geoReq GeocodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&geoReq); err != nil || geoReq.Lng == "" || geoReq.Lat == "" {
 		http.Error(w, "Empty Query", http.StatusBadRequest)
 		return
 	}
 
-	geo, err := g.cache.GeoCodeWithCache(r.Context(), geoReq.Lat, geoReq.Lng)
+	geo, err := g.service.GeoCode(geoReq.Lat, geoReq.Lng)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -68,14 +66,14 @@ func (g *GeoServiceController) HandleAddressGeocode(w http.ResponseWriter, r *ht
 // @failure 400 {string} string "Empty Query"
 // @failure 500 {string} string "Internal Server Error"
 // @Router /api/address/search [post]
-func (g *GeoServiceController) HandleAddressSearch(w http.ResponseWriter, r *http.Request) {
+func (g *GeoController) HandleAddressSearch(w http.ResponseWriter, r *http.Request) {
 	var req SearchRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Query == "" {
 		http.Error(w, "Empty Query", http.StatusBadRequest)
 		return
 	}
 
-	addresses, err := g.cache.SearchAddressWithCache(r.Context(), req.Query)
+	addresses, err := g.service.AddressSearch(req.Query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

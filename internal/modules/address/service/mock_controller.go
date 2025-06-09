@@ -10,7 +10,7 @@
 package service
 
 import (
-	entity "GeoService/internal/modules/address/entity"
+	entity "GeoService/internal/models"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"

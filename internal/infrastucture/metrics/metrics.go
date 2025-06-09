@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"GeoService/internal/modules/address/entity"
+	"GeoService/internal/models"
 	"context"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
@@ -52,8 +52,8 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 	return m
 }
 
-func (m *Metrics) MethodRequestDuration(methodName string, fn func(ctx context.Context, params ...string) ([]*entity.Address, error, bool)) func(ctx context.Context, params ...string) ([]*entity.Address, error) {
-	return func(ctx context.Context, params ...string) ([]*entity.Address, error) {
+func (m *Metrics) MethodRequestDuration(methodName string, fn func(ctx context.Context, params ...string) ([]*models.Address, error, bool)) func(ctx context.Context, params ...string) ([]*models.Address, error) {
+	return func(ctx context.Context, params ...string) ([]*models.Address, error) {
 		start := time.Now()
 
 		result, err, fromCache := fn(ctx, params...)

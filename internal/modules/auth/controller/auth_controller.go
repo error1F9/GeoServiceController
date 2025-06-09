@@ -1,19 +1,25 @@
 package authController
 
 import (
-	"GeoService/internal/modules/auth/entity"
+	"GeoService/internal/infrastucture/responder"
+	"GeoService/internal/models"
 	"GeoService/internal/modules/auth/service"
 	"encoding/json"
-	"github.com/go-chi/jwtauth/v5"
 	"net/http"
 )
 
 type AuthController struct {
 	service authService.Auther
+	responder.Responder
 }
 
-func NewAuthController(service authService.Auther) *AuthController {
-	return &AuthController{service}
+func NewAuthController(service authService.Auther, Responder responder.Responder) *AuthController {
+	return &AuthController{service: service, Responder: Responder}
+}
+
+type Auther interface {
+	HandleRegister(w http.ResponseWriter, r *http.Request)
+	HandleLogin(w http.ResponseWriter, r *http.Request)
 }
 
 // HandleRegister
@@ -28,19 +34,26 @@ func NewAuthController(service authService.Auther) *AuthController {
 // @failure 500 {string} string "Internal Server Error"
 // @Router /api/register [post]
 func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) {
-	var user entity.User
+	var user *models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := c.service.Register(r.Context(), user); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	in := authService.RegisterIn{
+		Username: user.Username,
+		Password: user.Password,
+		Email:    user.Email,
+		Role:     user.Role,
+	}
+
+	out := c.service.Register(r.Context(), in)
+	if out.Error != nil {
+		http.Error(w, out.Error.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode("User created")
+
+	c.OutputJSON(w, map[string]interface{}{"id": out.Id})
 }
 
 // HandleLogin
@@ -55,22 +68,20 @@ func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) 
 // @failure 500 {string} string "Internal Server Error"
 // @Router /api/login [post]
 func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	var user entity.User
+	var user *models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	tokenString, err := c.service.Login(r.Context(), user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	out := c.service.Login(r.Context(), user.Username, user.Password)
+	if out.Error != nil {
+		http.Error(w, out.Error.Error(), http.StatusBadRequest)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(tokenString)
-}
-
-func (c *AuthController) JWTAuth() *jwtauth.JWTAuth {
-	return c.service.GetJWTAuth()
+	c.OutputJSON(w, map[string]interface{}{
+		"User_id":       out.UserId,
+		"Access_token":  out.AccessToken,
+		"Refresh_token": out.RefreshToken,
+	})
 }

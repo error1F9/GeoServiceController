@@ -13,11 +13,15 @@ type ReverseProxy struct {
 	port string
 }
 
-func NewReverseProxy(host, port string) *ReverseProxy {
+func NewReverseProxy(host, port string) ReverseProxier {
 	return &ReverseProxy{
 		host: host,
 		port: port,
 	}
+}
+
+type ReverseProxier interface {
+	ReverseProxy(next http.Handler) http.Handler
 }
 
 // localhost:1313/static -> hugo

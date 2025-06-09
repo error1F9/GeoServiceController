@@ -2,8 +2,8 @@ package tests
 
 import (
 	"GeoService/internal/cacheproxy"
+	"GeoService/internal/models"
 	"GeoService/internal/modules/address/controller"
-	"GeoService/internal/modules/address/entity"
 	"GeoService/internal/modules/address/service"
 	"bytes"
 	"encoding/json"
@@ -38,7 +38,7 @@ func TestHandleAddressGeocode(t *testing.T) {
 				Lng: "37.6176",
 			},
 			mockCacheFunc: func() {
-				mockCache.EXPECT().GeoCodeWithCache(gomock.Any(), "55.7558", "37.6176").Return([]*entity.Address{{City: "Moscow"}}, nil)
+				mockCache.EXPECT().GeoCodeWithCache(gomock.Any(), "55.7558", "37.6176").Return([]*models.Address{{City: "Moscow"}}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   "{\"addresses\":[{\"city\":\"Moscow\",\"street\":\"\",\"house\":\"\",\"lat\":\"\",\"lon\":\"\"}]}\n",
@@ -94,7 +94,7 @@ func TestHandleAddressSearch(t *testing.T) {
 				Query: "Moscow",
 			},
 			mockCacheFunc: func() {
-				mockCache.EXPECT().SearchAddressWithCache(gomock.Any(), "Moscow").Return([]*entity.Address{{City: "Moscow"}}, nil)
+				mockCache.EXPECT().SearchAddressWithCache(gomock.Any(), "Moscow").Return([]*models.Address{{City: "Moscow"}}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   "{\"addresses\":[{\"city\":\"Moscow\",\"street\":\"\",\"house\":\"\",\"lat\":\"\",\"lon\":\"\"}]}\n",

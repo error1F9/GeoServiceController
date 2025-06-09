@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"GeoService/internal/modules/address/entity"
+	"GeoService/internal/models"
 )
 
 type GeocodeRequest struct {
@@ -10,12 +10,12 @@ type GeocodeRequest struct {
 }
 
 type GeocodeResponse struct {
-	Addresses []*entity.Address `json:"addresses"`
+	Addresses []*models.Address `json:"addresses"`
 }
 
 type SearchRequest struct {
 	Query string `json:"query" example:"мск сухонска 11/-89"`
 }
 type SearchResponse struct {
-	Addresses []*entity.Address `json:"addresses"`
+	Addresses []*models.Address `json:"addresses"`
 }

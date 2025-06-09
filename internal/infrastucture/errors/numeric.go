@@ -1,0 +1,121 @@
+package errors
+
+const (
+	NoError = iota
+	InternalError
+	GeneralError
+)
+
+const (
+	AuthServiceGeneralErr = iota + 2000
+	AuthServiceWrongPasswordErr
+	AuthServiceAccessTokenGenerationErr
+	AuthServiceRefreshTokenGenerationErr
+	AuthServiceUserNotVerified
+	AuthServiceVerifyErr
+	AuthGenerateHashErr
+	AuthUrlParseErr
+	NotifyEmailSendErr
+	UserServiceWrongPhoneCodeErr
+	UserServiceCreateUserErr
+	UserServiceUserAlreadyExists
+	UserServiceRetrieveUserErr
+	UserServiceUpdateErr
+	UserServiceWrongPasswordErr
+	UserServiceDeleteUserErr
+	AuthServiceJWKSFetchError
+	AuthServiceJWKSParseError
+	AuthServiceInvalidToken
+	AuthServiceKeyFileReadError
+	AuthServiceKeyParseError
+	AuthServiceTokenSignError
+	AuthServiceMissingConfigError
+	AuthServiceAppleAPIRequestError
+	AuthServiceAppleAPIResponseError
+
+	UserServiceInfluencerAlreadyExists
+	UserServiceRetrieveInfluencerErr
+	UserServiceInfluencerCategoryAlreadyExists
+	UserServiceRetrieveInfluencerCategoryErr
+	UserServiceCategoryAlreadyExists
+	UserServiceCreateCategoryErr
+	UserServiceInvalidUserID
+	UserServiceUpdateInfluencerErr
+	UserServiceDeleteInfluencerCategoryErr
+	UserServiceInvalidFieldIndex
+	UserServiceRetrieveCategoryErr
+	VideoServiceSaveFileErr
+	VideoServiceVideoAlreadyExists
+	VideoServiceCreateVideoErr
+	VideoServiceUpdatePathInCreateErr
+	VideoServiceInvalidVideoID
+	VideoServiceRetrieveVideoErr
+	VideoServiceInvalidFieldIndex
+	VideoServiceUpdateErr
+	VideoServiceInvalidPostID
+
+	PostServiceAlreadyExists
+	PostServiceInvalidField
+	PostServiceUpdateErr
+	PostServiceGetErr
+	PostServiceGetByIdErr
+
+	AdVideoServiceAlreadyExists
+	AdVideoServiceGetByIdErr
+	AdVideoServiceGetErr
+	AdVideoServiceRetrieveDeviceStatusErr
+	AdVideoServiceCreateDeviceStatusErr
+	AdVideoServiceUpdateDeviceStatusErr
+	AdVideoServiceCreateVideoErr
+	AdVideoServiceSaveFileErr
+	AdVideoServiceUpdatePathInCreateErr
+	AdVideoServiceInvalidVideoID
+	AdVideoServiceRetrieveVideoErr
+	AdVideoServiceInvalidFieldIndex
+	AdVideoServiceGetDurationErr
+	PostServiceInvalidLink
+	PostServicePlayTrackErr
+	PostServiceUnauthorized
+
+	AdvertiserServiceUserAlreadyExists
+	AdvertiserServiceCreateErr
+	AdvertiserServiceUpdateErr
+	AdvertiserServiceGetErr
+	AdvertiserServiceListErr
+	AdvertiserServiceDeleteErr
+
+	TabletServiceInvalidTabletID
+	TabletServiceInvalidFieldIndex
+	TabletServiceUpdateTabletErr
+	TabletServiceDeleteTabletErr
+	TabletServiceRetrieveTabletsErr
+	TabletServiceRetrieveTabletErr
+	TabletServiceTabletAlreadyExists
+	TabletServiceCreateTabletErr
+	TabletServiceGetTabletByIDNotFound
+
+	ScreenServiceRetrieveScreensErr
+	ScreenServiceGetScreenByIDNotFound
+	ScreenServiceRetrieveScreenErr
+	ScreenServiceScreenAlreadyExists
+	ScreenServiceCreateScreenErr
+	ScreenServiceInvalidScreenID
+	ScreenServiceInvalidFieldIndex
+	ScreenServiceUpdateScreenErr
+	ScreenServiceDeleteScreenErr
+
+	CampaignServiceRetrieveCampaignsErr
+	CampaignServiceGetCampaignByIDNotFound
+	CampaignServiceRetrieveCampaignErr
+	CampaignServiceCampaignAlreadyExists
+	CampaignServiceCreateCampaignErr
+	CampaignServiceInvalidCampaignID
+	CampaignServiceInvalidFieldIndex
+	CampaignServiceUpdateCampaignErr
+	CampaignServiceDeleteCampaignErr
+	CampaignServiceGetShowStatsDivisionByZero
+
+	ZoneServiceZoneAlreadyExists
+	ZoneServiceCreateZoneErr
+	ZoneServiceDeleteZoneErr
+)

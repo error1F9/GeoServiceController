@@ -1,7 +1,7 @@
 package service
 
 import (
-	"GeoService/internal/modules/address/entity"
+	"GeoService/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,8 +20,8 @@ type GeoService struct {
 
 //go:generate mockgen -source=address.go -destination=mocks/mock_controller.go -package=mocks
 type GeoProvider interface {
-	AddressSearch(input string) ([]*entity.Address, error)
-	GeoCode(lat, lng string) ([]*entity.Address, error)
+	AddressSearch(input string) ([]*models.Address, error)
+	GeoCode(lat, lng string) ([]*models.Address, error)
 }
 
 func NewGeoService(apiKey, secretKey string) *GeoService {
@@ -47,8 +47,8 @@ func NewGeoService(apiKey, secretKey string) *GeoService {
 	}
 }
 
-func (g *GeoService) AddressSearch(input string) ([]*entity.Address, error) {
-	var res []*entity.Address
+func (g *GeoService) AddressSearch(input string) ([]*models.Address, error) {
+	var res []*models.Address
 	rawRes, err := g.api.Address(context.Background(), &suggest.RequestParams{Query: input})
 	if err != nil {
 		return nil, err
@@ -58,13 +58,13 @@ func (g *GeoService) AddressSearch(input string) ([]*entity.Address, error) {
 		if r.Data.City == "" || r.Data.Street == "" {
 			continue
 		}
-		res = append(res, &entity.Address{City: r.Data.City, Street: r.Data.Street, House: r.Data.House, Lat: r.Data.GeoLat, Lon: r.Data.GeoLon})
+		res = append(res, &models.Address{City: r.Data.City, Street: r.Data.Street, House: r.Data.House, Lat: r.Data.GeoLat, Lon: r.Data.GeoLon})
 	}
 
 	return res, nil
 }
 
-func (g *GeoService) GeoCode(lat, lng string) ([]*entity.Address, error) {
+func (g *GeoService) GeoCode(lat, lng string) ([]*models.Address, error) {
 	httpClient := &http.Client{}
 	var data = strings.NewReader(fmt.Sprintf(`{"lat": %s, "lon": %s}`, lat, lng))
 	req, err := http.NewRequest("POST", "https://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address", data)
@@ -84,9 +84,9 @@ func (g *GeoService) GeoCode(lat, lng string) ([]*entity.Address, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res []*entity.Address
+	var res []*models.Address
 	for _, r := range geoCode.Suggestions {
-		var address entity.Address
+		var address models.Address
 		address.City = string(r.Data.City)
 		address.Street = string(r.Data.Street)
 		address.House = r.Data.House

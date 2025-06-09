@@ -1,71 +1,110 @@
 package authService
 
 import (
-	"GeoService/internal/infrastructure/cache"
-	"GeoService/internal/modules/auth/entity"
+	"GeoService/config"
+	"GeoService/internal/infrastucture/tools/cryptography"
+	"GeoService/internal/models"
+	"GeoService/internal/modules/user/repository"
 	"context"
 	"errors"
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/bcrypt"
+	"go.uber.org/zap"
+	"strconv"
 )
 
 type AuthService struct {
-	jwtAuth *jwtauth.JWTAuth
-	redis   cache.Cacher
+	config  config.AppConfig
+	db      repository.Userer
+	jwtAuth cryptography.TokenManager
+	logger  *zap.Logger
 }
 
-type Auther interface {
-	Register(ctx context.Context, user entity.User) error
-	Login(ctx context.Context, user entity.User) (string, error)
-	GetJWTAuth() *jwtauth.JWTAuth
+func NewAuthService(db repository.Userer, jwtauth cryptography.TokenManager) *AuthService {
+	return &AuthService{db: db, jwtAuth: jwtauth}
 }
 
-func NewAuthService(authKey []byte, redis cache.Cacher) *AuthService {
-	tokenAuth := jwtauth.New("HS256", authKey, nil)
-	return &AuthService{jwtAuth: tokenAuth, redis: redis}
-}
-
-func (a *AuthService) GetJWTAuth() *jwtauth.JWTAuth {
-	return a.jwtAuth
-}
-
-func (a *AuthService) Register(ctx context.Context, user entity.User) error {
-	if user.Username == "" || user.Password == "" {
-		return errors.New("username or password is empty")
-	}
-
-	if _, err := a.redis.Get(ctx, user.Username); !errors.Is(err, redis.Nil) {
-		return errors.New("username exist")
-	} else if errors.Is(err, redis.Nil) {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return errors.New("failed to hash password")
+func (a *AuthService) Register(ctx context.Context, in RegisterIn) RegisterOut {
+	if in.Username == "" || in.Password == "" {
+		return RegisterOut{
+			Id:    nil,
+			Error: errors.New("username or password is empty"),
 		}
-
-		err = a.redis.Set(ctx, user.Username, string(hashedPassword), 0)
-		return err
-	} else if err != nil {
-		return err
 	}
 
-	return nil
+	hashedPassword, err := cryptography.HashPassword(in.Password)
+	if err != nil {
+		return RegisterOut{
+			nil,
+			errors.New("failed to hash password"),
+		}
+	}
+	in.Password = hashedPassword
+
+	user := &models.User{
+		Username: in.Username,
+		Password: in.Password,
+		Email:    in.Email,
+		Role:     in.Role,
+	}
+	id, err := a.db.CreateUser(ctx, user)
+
+	return RegisterOut{
+		Id:    &id,
+		Error: err,
+	}
 }
 
-func (a *AuthService) Login(ctx context.Context, user entity.User) (string, error) {
-	val, err := a.redis.Get(ctx, user.Username)
-	if errors.Is(err, redis.Nil) {
-		return "", errors.New("username doesn't exist")
-	} else if err != nil {
-		return "", err
+func (a *AuthService) Login(ctx context.Context, login, password string) AuthorizeOut {
+	user, err := a.db.GetUserByUsername(ctx, login)
+	if err != nil {
+		return AuthorizeOut{
+			Error: err,
+		}
 	}
 
-	if err = bcrypt.CompareHashAndPassword(val.([]byte), []byte(user.Password)); err != nil {
-		return "", errors.New("password is wrong")
+	if !cryptography.CheckPassword(user.Password, password) {
+		return AuthorizeOut{
+			Error: err,
+		}
 	}
 
-	_, tokenString, err := a.jwtAuth.Encode(map[string]interface{}{"username": user.Username})
+	accessToken, refreshToken, err := a.generateTokens(user)
+	if err != nil {
+		return AuthorizeOut{
+			Error: err,
+		}
+	}
 
-	return tokenString, err
+	return AuthorizeOut{
+		UserId:       user.Id,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
 
+}
+
+func (a *AuthService) generateTokens(user *models.User) (string, string, error) {
+	accessToken, err := a.jwtAuth.CreateToken(
+		strconv.Itoa(int(user.Id)),
+		user.Role,
+		"",
+		a.config.JWTKey.AccessTTL,
+		cryptography.AccessToken,
+	)
+	if err != nil {
+		a.logger.Error("auth: create access token err", zap.Error(err))
+		return "", "", errors.New("failed to generate access token")
+	}
+	refreshToken, err := a.jwtAuth.CreateToken(
+		strconv.Itoa(int(user.Id)),
+		user.Role,
+		"",
+		a.config.JWTKey.RefreshTTL,
+		cryptography.RefreshToken,
+	)
+	if err != nil {
+		a.logger.Error("auth: create access token err", zap.Error(err))
+		return "", "", errors.New("failed to generate refresh token")
+	}
+
+	return accessToken, refreshToken, nil
 }

@@ -6,16 +6,16 @@ COPY . .
 
 RUN go mod download
 
-WORKDIR /app/cmd
+WORKDIR /app/cmd/http
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main.go .
 
 FROM alpine:latest
 RUN apk update
 
 WORKDIR /app
 
-COPY --from=builder /app/cmd/main .
+COPY --from=builder /app/cmd/http .
 
 COPY ./hugo ./hugo
 

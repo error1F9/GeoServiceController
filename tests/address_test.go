@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"GeoService/internal/modules/address/entity"
+	"GeoService/internal/models"
 	"GeoService/internal/modules/address/service"
 	"bou.ke/monkey"
 	"context"
@@ -37,14 +37,14 @@ func TestAddressSearchService(t *testing.T) {
 	tests := []struct {
 		Name           string
 		InputFunc      func(_ *suggest.Api, ctx context.Context, params *suggest.RequestParams) ([]*suggest.AddressSuggestion, error)
-		ExpectedOutput []*entity.Address
+		ExpectedOutput []*models.Address
 		ExpectedError  error
 		Input          string
 	}{
 		{
 			Name:      "Test 1: no errors",
 			InputFunc: AddressSearch200Test,
-			ExpectedOutput: []*entity.Address{
+			ExpectedOutput: []*models.Address{
 				{
 					City:   "Test City 1",
 					Street: "Test Street 1",

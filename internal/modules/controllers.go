@@ -1,18 +1,22 @@
 package modules
 
 import (
-	"GeoService/internal/modules/address/controller"
+	"GeoService/internal/infrastucture/components"
+	geoController "GeoService/internal/modules/address/controller"
 	authController "GeoService/internal/modules/auth/controller"
+	userController "GeoService/internal/modules/user/controller"
 )
 
-type SuperController struct {
-	GeoController  controller.GeoServiceController
-	AuthController authController.AuthController
+type Controllers struct {
+	GeoController  geoController.Geoer
+	AuthController authController.Auther
+	UserController userController.Userer
 }
 
-func NewSuperController(geoController controller.GeoServiceController, authController authController.AuthController) *SuperController {
-	return &SuperController{
-		GeoController:  geoController,
-		AuthController: authController,
+func NewControllers(services *Services, components *components.Components) *Controllers {
+	return &Controllers{
+		GeoController:  geoController.NewGeoController(services.GeoService),
+		AuthController: authController.NewAuthController(services.AuthService, components.Responder),
+		UserController: userController.NewUserController(services.UserService, components),
 	}
 }
